@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Post, CustomUser
 from .serializers import PostSerializer, UserSerializer
 from rest_framework.exceptions import PermissionDenied
-
+from rest_framework.generics import ListAPIView
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -42,3 +42,17 @@ class FollowViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Follow.objects.filter(follower=self.request.user)
+
+
+class FeedView(ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        following_users = Follow.objects.filter(
+            follower=self.request.user
+        ).values_list('following', flat=True)
+
+        return Post.objects.filter(
+            author__in=following_users
+        ).order_by('-created_at')
