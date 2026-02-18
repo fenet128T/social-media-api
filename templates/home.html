@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Create Post</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="content" rows="3" cols="50"></textarea>
+    <br>
+    <button type="submit">Post</button>
+</form>
+
+<hr>
+
+<h2>Your Feed</h2>
+
+{% for post in posts %}
+    <div>
+        <strong>{{ post.author.username }}</strong>
+        <p>{{ post.content }}</p>
+        <small>{{ post.created_at }}</small>
+        <hr>
+    </div>
+{% empty %}
+    <p>No posts yet.</p>
+{% endfor %}
+
+{% endblock %}

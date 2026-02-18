@@ -6,6 +6,10 @@ from .models import Post, CustomUser
 from .serializers import PostSerializer, UserSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -56,3 +60,34 @@ class FeedView(ListAPIView):
         return Post.objects.filter(
             author__in=following_users
         ).order_by('-created_at')
+
+
+@login_required
+def home_view(request):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            Post.objects.create(author=request.user, content=content)
+
+    following_users = Follow.objects.filter(
+        follower=request.user
+    ).values_list('following', flat=True)
+
+    posts = Post.objects.filter(
+        author__in=following_users
+    ).order_by('-created_at')
+
+    return render(request, 'home.html', {'posts': posts})
+
+
+def register_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'register.html', {'form': form})
