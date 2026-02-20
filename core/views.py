@@ -1,3 +1,4 @@
+from urllib import request
 from rest_framework import viewsets
 from .models import Follow, Like
 from .serializers import FollowSerializer
@@ -74,12 +75,19 @@ def home_view(request):
         follower=request.user
     ).values_list('following', flat=True)
 
+
     posts = Post.objects.filter(
         author__in=following_users
     ).order_by('-created_at')
 
-    return render(request, 'home.html', {'posts': posts})
+    liked_posts = Like.objects.filter(
+        user=request.user
+    ).values_list('post_id', flat=True)
 
+    return render(request, 'home.html', {
+        'posts': posts,
+        'liked_posts': liked_posts
+    })
 
 def register_view(request):
     if request.method == 'POST':

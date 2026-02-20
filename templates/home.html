@@ -18,16 +18,33 @@
 {% for post in posts %}
     <div>
         <strong>
-    <a href="{% url 'profile' post.author.username %}">
-        {{ post.author.username }}
-    </a>
-</strong>
+            <a href="{% url 'profile' post.author.username %}">
+                {{ post.author.username }}
+            </a>
+        </strong>
+
         <p>{{ post.content }}</p>
+
         <small>{{ post.created_at }}</small>
+        <br>
+
+        <form action="{% url 'like_post' post.id %}" method="POST" style="display:inline;">
+            {% csrf_token %}
+            {% if post.id in liked_posts %}
+                <button type="submit">Unlike</button>
+            {% else %}
+                <button type="submit">Like</button>
+            {% endif %}
+        </form>
+
+        <span>{{ post.likes.count }} Likes</span>
+
         <hr>
     </div>
-{% empty %}
-    <p>No posts yet.</p>
 {% endfor %}
+
+{% if not posts %}
+    <p>No posts to show. Follow some users to see their posts here!</p>
+{% endif %}
 
 {% endblock %}

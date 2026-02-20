@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from django.contrib.auth import views as auth_views
 from .views import FeedView, PostViewSet, UserViewSet,FollowViewSet,home_view, register_view
 from .views import profile_view
+from .views import like_post
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -17,4 +18,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
     path('profile/<str:username>/', profile_view, name='profile'),
+    path('like/<int:post_id>/', like_post, name='like_post'),
 ] + router.urls
