@@ -10,7 +10,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -91,3 +92,49 @@ def register_view(request):
         form = UserCreationForm()
 
     return render(request, 'register.html', {'form': form})
+
+User = get_user_model()
+
+@login_required
+def profile_view(request, username):
+    profile_user = get_object_or_404(User, username=username)
+
+    # Follow / Unfollow logic
+    if request.method == 'POST':
+        if profile_user != request.user:
+            follow, created = Follow.objects.get_or_create(
+                follower=request.user,
+                following=profile_user
+            )
+            if not created:
+                follow.delete()
+
+        return redirect('profile', username=username)
+
+    # Stats
+    followers_count = Follow.objects.filter(
+        following=profile_user
+    ).count()
+
+    following_count = Follow.objects.filter(
+        follower=profile_user
+    ).count()
+
+    is_following = Follow.objects.filter(
+        follower=request.user,
+        following=profile_user
+    ).exists()
+
+    posts = Post.objects.filter(
+        author=profile_user
+    ).order_by('-created_at')
+
+    context = {
+        'profile_user': profile_user,
+        'followers_count': followers_count,
+        'following_count': following_count,
+        'is_following': is_following,
+        'posts': posts
+    }
+
+    return render(request, 'profile.html', context)
