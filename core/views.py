@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .models import Follow
+from .models import Follow, Like
 from .serializers import FollowSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import Post, CustomUser
@@ -138,3 +138,17 @@ def profile_view(request, username):
     }
 
     return render(request, 'profile.html', context)
+
+@login_required
+def like_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    like, created = Like.objects.get_or_create(
+        user=request.user,
+        post=post
+    )
+
+    if not created:
+        like.delete()
+
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
